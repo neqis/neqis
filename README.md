@@ -43,5 +43,5 @@ The name of the folder must be set in the used `.conf` file.
 **Train**
 
 ```shell
-python run_experiments.py --mode train --conf ./confs/CONF_NAME.conf --case CASE_NAME
+python run_experiment.py --mode train --conf ./confs/CONF_NAME.conf --case CASE_NAME
 ```
