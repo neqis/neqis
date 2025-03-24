@@ -11,8 +11,11 @@ from shutil import copyfile
 from tqdm import tqdm
 from pyhocon import ConfigFactory
 from models.dataset import Dataset
-from models.networks import RenderingNetwork, SDFNetwork, SingleVarianceNetwork, NeRF
-from models.renderer import NeuSRenderer
+from networks.rendering_network import RenderingNetwork
+from networks.sdf_network import SDFNetwork
+from networks.single_variance_network import SingleVarianceNetwork
+from networks.nerf import NeRF
+from models.renderer import NeQISRenderer
 
 
 class Runner:
@@ -71,7 +74,7 @@ class Runner:
         params_to_train += list(self.color_network.parameters())
         
         self.optimizer = torch.optim.Adam(params_to_train, lr=self.learning_rate)
-        self.renderer = NeuSRenderer(self.nerf_outside,
+        self.renderer = NeQISRenderer(self.nerf_outside,
                                      self.sdf_network,
                                      self.deviation_network,
                                      self.color_network,
@@ -394,22 +397,6 @@ class Runner:
         normal_img[mask] = [255, 255, 255]
         
         return img_fine, normal_img
-
-    def validate_mesh(self, world_space=False, resolution=64, threshold=0.0):
-        bound_min = torch.tensor(self.dataset.object_bbox_min, dtype=torch.float32)
-        bound_max = torch.tensor(self.dataset.object_bbox_max, dtype=torch.float32)
-
-        vertices, triangles =\
-            self.renderer.extract_geometry(bound_min, bound_max, resolution=resolution, threshold=threshold)
-        os.makedirs(os.path.join(self.base_exp_dir, 'meshes'), exist_ok=True)
-
-        if world_space:
-            vertices = vertices * self.dataset.scale_mats_np[0][0, 0] + self.dataset.scale_mats_np[0][:3, 3][None]
-
-        mesh = trimesh.Trimesh(vertices, triangles)
-        mesh.export(os.path.join(self.base_exp_dir, 'meshes', '{:0>8d}.ply'.format(self.iter_step)))
-
-        logging.info('End')
     
     def rendering_images(self, idx=-1, resolution_level=-1):
         if idx < 0:
@@ -493,15 +480,7 @@ class Runner:
     def output_rendering_image (self, resolution = -1 ):
         for i in range (self.dataset.n_images):
             self.rendering_images(idx= i, resolution_level=resolution)
-            
-    def novel_view_synthesis(self, idx_0, idx_1, ratio, resolution_level):
-        img, normal_img = self.render_novel_image(idx_0, idx_1, ratio, resolution_level)
-
-        os.makedirs(os.path.join(self.base_exp_dir, 'novel_view'), exist_ok=True)
-        
-        cv.imwrite(os.path.join(self.base_exp_dir, 'novel_view', '{:0>8d}_{}_{}.png'.format(self.iter_step, idx_0, idx_1)), img)
-        cv.imwrite(os.path.join(self.base_exp_dir, 'novel_view', '{:0>8d}_{}_{}_normal.png'.format(self.iter_step, idx_0, idx_1)), normal_img)
-    
+                
     def interpolate_view(self, img_idx_0, img_idx_1):
         images = []
         n_frames = 60
@@ -529,8 +508,6 @@ class Runner:
 
 
 if __name__ == '__main__':
-    print('Hello Wooden')
-
     torch.set_default_tensor_type('torch.cuda.FloatTensor')
 
     FORMAT = "[%(filename)s:%(lineno)s - %(funcName)20s() ] %(message)s"
@@ -552,8 +529,6 @@ if __name__ == '__main__':
 
     if args.mode == 'train':
         runner.train()
-    elif args.mode == 'validate_mesh':
-        runner.validate_mesh(world_space=False, resolution=512, threshold=args.mcube_threshold)
     elif args.mode == 'render_image':
         runner.output_rendering_image(resolution=1)
     elif args.mode.startswith('interpolate'):  # Interpolate views given two image indices
@@ -561,9 +536,3 @@ if __name__ == '__main__':
         img_idx_0 = int(img_idx_0)
         img_idx_1 = int(img_idx_1)
         runner.interpolate_view(img_idx_0, img_idx_1)
-    elif args.mode.startswith('novel_view'):
-        _, _, img_idx_0, img_idx_1, ratio = args.mode.split('_')
-        img_idx_0 = int(img_idx_0)
-        img_idx_1 = int(img_idx_1)
-        ratio = float(ratio)
-        runner.novel_view_synthesis(img_idx_0, img_idx_1, ratio, resolution_level=1)

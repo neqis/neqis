@@ -75,7 +75,7 @@ def sample_pdf(bins, weights, n_samples, det=False):
     return samples
 
 
-class NeuSRenderer:
+class NeQISRenderer:
     def __init__(self,
                  nerf,
                  sdf_network,
