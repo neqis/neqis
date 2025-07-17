@@ -1,7 +1,6 @@
 import torch
 import torch.nn as nn
 
-
 # Positional encoding embedding. Code was taken from https://github.com/bmild/nerf.
 class Embedder:
     def __init__(self, **kwargs):
