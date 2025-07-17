@@ -1,5 +1,6 @@
 # NeQIS
 
+
 This is the implementation of **NeQIS: Neural Quadratic Implicit Surfaces**.
 
 ### [Project page](https://neqis.github.io/)
