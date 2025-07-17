@@ -6,7 +6,6 @@ import torch.nn.functional as F
 import numpy as np
 from models.embedder import get_embedder
 
-
 class SDFNetwork(nn.Module):
     def __init__(self,
                  d_in,
