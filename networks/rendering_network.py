@@ -68,3 +68,4 @@ class RenderingNetwork(nn.Module):
         if self.squeeze_out:
             x = torch.sigmoid(x)
         return x
+      
