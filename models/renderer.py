@@ -5,6 +5,7 @@ import numpy as np
 import mcubes
 import os
 
+
 def extract_fields(bound_min, bound_max, resolution, query_func, sdf_model):
     N = 64
     X = torch.linspace(bound_min[0], bound_max[0], resolution).split(N)
