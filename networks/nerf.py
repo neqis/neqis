@@ -83,6 +83,7 @@ class NeRF(nn.Module):
                 h = F.relu(h)
 
             rgb = self.rgb_linear(h)
+            
             return alpha, rgb
         else:
             assert False
