@@ -17,7 +17,6 @@ from networks.single_variance_network import SingleVarianceNetwork
 from networks.nerf import NeRF
 from models.renderer import NeQISRenderer
 
-
 class Runner:
     def __init__(self, conf_path, mode='train', case='CASE_NAME', is_continue=False, checkpoint = False):
         self.device = torch.device('cuda')
